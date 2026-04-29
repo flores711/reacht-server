@@ -1,7 +1,14 @@
 package flores.caro.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name="language")
 public class Language {
-    int id;
-    String isoCode; // --> Limitar a solo 2 caracteres de alguna (otra) forma?
-    String name;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+    @Column(name="iso_code")
+    private String isoCode; // --> Limitar a solo 2 caracteres de alguna (otra) forma?
+    private String name;
 }

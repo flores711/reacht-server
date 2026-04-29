@@ -2,6 +2,8 @@ package flores.caro.model;
 
 import jakarta.persistence.*;
 
+@Entity
+@Table(name="message")
 public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
