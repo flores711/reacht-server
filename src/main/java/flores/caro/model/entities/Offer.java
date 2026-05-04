@@ -1,6 +1,8 @@
-package flores.caro.model;
+package flores.caro.model.entities;
 
 import jakarta.persistence.*;
+
+import java.util.List;
 
 @Entity
 @Table(name="offer")
@@ -34,6 +36,9 @@ public class Offer {
     @OneToOne
     @JoinColumn(name="chat_id")
     private Chat chat;
+
+    // TODO
+    // private List<User> players;
 
     // Lista de jugadores
 

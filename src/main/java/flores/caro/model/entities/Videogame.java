@@ -1,4 +1,4 @@
-package flores.caro.model;
+package flores.caro.model.entities;
 
 import jakarta.persistence.*;
 

@@ -19,11 +19,11 @@
         <!-- <property name="hibernate.query.factory_class">org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory</property> -->
 
         <!-- Clases con anotaciones -->
-        <mapping class="flores.caro.model.Chat"/>
-        <mapping class="flores.caro.model.Language"/>
-        <mapping class="flores.caro.model.Message"/>
-        <mapping class="flores.caro.model.Offer"/>
-        <mapping class="flores.caro.model.User"/>
-        <mapping class="flores.caro.model.Videogame"/>
+        <mapping class="flores.caro.model.entities.Chat"/>
+        <mapping class="flores.caro.model.entities.Language"/>
+        <mapping class="flores.caro.model.entities.Message"/>
+        <mapping class="flores.caro.model.entities.Offer"/>
+        <mapping class="flores.caro.model.entities.User"/>
+        <mapping class="flores.caro.model.entities.Videogame"/>
     </session-factory>
 </hibernate-configuration>
