@@ -12,7 +12,7 @@ public class MessageProcessor {
     }
 
     public String processMessage(String json) {
-        DataPackage dataPackage = jsonToPackage(json);
+        DataPackage dataPackage =   jsonToPackage(json);
         switch (dataPackage.getAction()) {
             case "LOGIN":
                 logIn(dataPackage);
@@ -46,7 +46,7 @@ public class MessageProcessor {
 
 
     public DataPackage jsonToPackage(String json) {
-
+        // Ver última respuesta Gemini explicando esto con Jackson
 
 
         return new DataPackage("s", null);
