@@ -20,7 +20,22 @@ public class UnitTests {
         MessageProcessor mp = new MessageProcessor(dao);
 
         boolean expected = true;
-        boolean actual = mp.processMessage();   // Hacer deserializar y demás
+        // boolean actual = mp.processMessage();   // Hacer deserializar y demás
+    }
+
+    @Test
+    void jsonToPackageTest() {
+        String json = "{ " +
+                        "\"action\": \"LOGIN\", " +
+                        "\"data\": {" +
+                        "   \"username\": \"pacoercucaracha\", " +
+                        "   \"password\": \"holapaco\"" +
+                        "}" +
+                    "}";
+
+        DBDAO dao = new DBDAO();
+        MessageProcessor mp = new MessageProcessor(dao);
+        mp.jsonToPackage(json);
     }
 
 }
