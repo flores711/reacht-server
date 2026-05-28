@@ -37,7 +37,6 @@ public class DBDAO {
     public boolean checkCredentials(String username, String password) {
         SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
         Session session = sessionFactory.openSession();
-        Transaction transaction = session.beginTransaction();
 
         Query<User> query = session.createQuery("FROM User u WHERE u.username = :username AND u.password = :password", User.class);
         query.setParameter("username", username);
@@ -46,6 +45,50 @@ public class DBDAO {
         List<User> users = query.list();
 
         return !users.isEmpty();
+    }
+
+    public boolean existsUsername(String username) {
+        SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
+        Session session = sessionFactory.openSession();
+
+        Query<User> query = session.createQuery("FROM User u WHERE u.username = :username", User.class);
+        query.setParameter("username", username);
+
+        List<User> users = query.list();
+
+        return !users.isEmpty();
+    }
+
+    public boolean existsEmail(String email) {
+        SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
+        Session session = sessionFactory.openSession();
+
+        Query<User> query = session.createQuery("FROM User u WHERE u.email = :email", User.class);
+        query.setParameter("email", email);
+
+        List<User> users = query.list();
+
+        return !users.isEmpty();
+    }
+
+    public boolean registerUser(String email, String username, String password) {
+        SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
+        Session session = sessionFactory.openSession();
+        Transaction transaction = session.beginTransaction();
+
+        User newUser = new User();
+        newUser.setEmail(email);
+        newUser.setUsername(username);
+        newUser.setPassword(password);
+
+        session.persist(newUser);
+
+        try {
+            transaction.commit();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
 

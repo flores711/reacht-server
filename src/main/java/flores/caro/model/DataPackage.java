@@ -13,6 +13,14 @@ public class DataPackage {
         this.data = data;
     }
 
+    public void setAction(String action) {
+        this.action = action;
+    }
+
+    public void setData(Map<String, Object> data) {
+        this.data = data;
+    }
+
     public String getAction() {
         return action;
     }

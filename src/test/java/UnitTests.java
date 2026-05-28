@@ -1,4 +1,6 @@
 import flores.caro.MessageProcessor;
+import flores.caro.model.DataPackage;
+import flores.caro.model.entities.User;
 import flores.caro.utils.DBDAO;
 import org.junit.jupiter.api.Test;
 
@@ -37,5 +39,34 @@ public class UnitTests {
         MessageProcessor mp = new MessageProcessor(dao);
         mp.jsonToPackage(json);
     }
+
+    @Test
+    void daoRegisterUserTest() {
+        DBDAO dao = new DBDAO();
+        dao.registerUser("hola@gmail.com", "user1", "1234");
+    }
+
+    @Test
+    void signUpTest() {
+        String json = "{ " +
+                "\"action\": \"SIGNUP\", " +
+                "\"data\": {" +
+                "   \"email\": \"hola2@gmail.com\", " +
+                "   \"username\": \"user2\", " +
+                "   \"password\": \"1234\"" +
+                "}" +
+            "}";
+
+        DBDAO dao = new DBDAO();
+        MessageProcessor mp = new MessageProcessor(dao);
+
+        String response = mp.processMessage(json);
+        DataPackage responseDataPackage = mp.jsonToPackage(response);
+
+        System.out.println(responseDataPackage.getAction());
+        System.out.println(responseDataPackage.getData());
+    }
+
+
 
 }
