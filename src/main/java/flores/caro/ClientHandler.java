@@ -1,39 +1,40 @@
 package flores.caro;
 
+import java.io.*;
 import java.net.Socket;
 
 public class ClientHandler implements Runnable {
     private Socket clientHandlerSocket;
+    private MessageProcessor messageProcessor;
 
-    public ClientHandler(Socket clientHandlerSocket) {
+    public ClientHandler(Socket clientHandlerSocket, MessageProcessor messageProcessor) {
         this.clientHandlerSocket = clientHandlerSocket;
+        this.messageProcessor = messageProcessor;
     }
-
 
     @Override
     public void run() {
-        logIn();
+        try (BufferedReader clientInput = new BufferedReader(new InputStreamReader(clientHandlerSocket.getInputStream()));
+            PrintWriter clientOutput = new PrintWriter(new BufferedWriter(new OutputStreamWriter(clientHandlerSocket.getOutputStream())), true)) {
+
+            String input;
+            String response;
+            while ((input = clientInput.readLine()) != null) {
+                response = messageProcessor.processMessage(input);
+                clientOutput.println(response);
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                if (clientHandlerSocket != null)
+                    clientHandlerSocket.close();
+                System.out.println("Client Handler socket closed");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    private void logIn() {
-        // Comprobar credenciales almacenadas
-        // Si no, se muestra la primera pantalla de iniciar sesión
-        //      Cuando se registre / inicie sesión, almacenar credenciales
-        // Si sí se encuentran credenciales, iniciar sesión con ellas y acceder a app directamente
-        // Esto es el servidor, así que entiendo que el cliente también me debe mandar estos datos y yo los compruebo con la BD
-
-        // (Mirar cómo se hace en apps reales, si es así o de otra forma)
-
-        // Y dónde pongo todo el resto de acciones? Por ej buscar oferta, crear una
-        // En esta clase? O hago clase aparte con todo?
-        // --> DAO?
-        // Pero igualmente aparte del DAO, dónde manejo cada acción
-        // --> Claro, entiendo que eso se maneja desde la interfaz
-        //     La interfaz mandará X acciones y esto lo manejará
-        //     --> En el propio run(), o en otro sitio?
-        //         O que el run() llame a otra función de manejar acción y dependiendo de lo que envíe el cliente, llamar a una función u otra
-        //         --> Supongo que mirar igualmente también cómo se hace en apps reales
-
-        // Mirar Gemini Pro con cuenta instituto
-    }
 }

@@ -1,4 +1,4 @@
-package flores.caro.model;
+package flores.caro.model.entities;
 
 import jakarta.persistence.*;
 
@@ -8,7 +8,9 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    @Column(unique = true)
     private String username;
+    @Column(unique = true)
     private String email;
     private String password;
     private String description;
