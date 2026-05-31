@@ -2,7 +2,8 @@ package flores.caro.model.entities;
 
 import jakarta.persistence.*;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name="offer")
@@ -33,21 +34,20 @@ public class Offer {
     @JoinColumn(name="videogame_id")
     private Videogame videogame;
 
-    @OneToOne
+    // Para guardar instancia de chat en BD tmb al hacer persist de la oferta
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name="chat_id")
     private Chat chat;
 
-    // TODO
-    // private List<User> players;
-
-    // Lista de jugadores
+    @OneToMany(mappedBy = "currentOffer")
+    private Set<User> players = new HashSet<User>();
 
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -121,5 +121,19 @@ public class Offer {
 
     public void setChat(Chat chat) {
         this.chat = chat;
+    }
+
+    public Set<User> getPlayers() {
+        return players;
+    }
+
+    public void addPlayer(User player) {
+        this.players.add(player);
+        player.setCurrentOffer(this);
+    }
+
+    public void removePlayer(User player) {
+        this.players.remove(player);
+        player.setCurrentOffer(null);
     }
 }
