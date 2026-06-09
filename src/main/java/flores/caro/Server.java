@@ -20,7 +20,8 @@ public class Server {
     private DBDAO dao;
     private AtomicBoolean running = new AtomicBoolean(true);
 
-    private void openServer() {
+    // TODO: HACER FUNCIÓN PODER CERRAR SERVIDOR CONTROLADAMENTE
+    public Server() {
         loadProperties();
         dao = new DBDAO();
         messageProcessor = new MessageProcessor(dao);
@@ -29,10 +30,13 @@ public class Server {
             executor = Executors.newFixedThreadPool(threadPoolSize);
             System.out.println("Server opened!");
         } catch (IOException e) {
+            // TODO
             throw new RuntimeException(e);
         }
     }
 
+    // TODO: Qué pasa si no se cargan las properties bien, si no están en el formato correcto...
+    // No se debe construir siquiera el objeto servidor si eso ocurre
     private void loadProperties() {
         Properties properties = new Properties();
         try (FileInputStream fis = new FileInputStream("server.properties")) {
@@ -40,6 +44,7 @@ public class Server {
             serverPort = Integer.parseInt(properties.getProperty("serverPort"));
             threadPoolSize = Integer.parseInt(properties.getProperty("threadPoolSize"));
         } catch (IOException e) {
+            // TODO
             throw new RuntimeException(e);
         }
     }
@@ -56,6 +61,7 @@ public class Server {
                 System.out.println("Client Handler Thread executed");
             }
         } catch (IOException e) {
+            // TODO
             throw new RuntimeException(e);
         }
     }
@@ -66,7 +72,6 @@ public class Server {
 
     static void main() {
         Server server = new Server();
-        server.openServer();
         server.acceptClients();
     }
 }

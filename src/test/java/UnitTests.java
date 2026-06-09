@@ -60,7 +60,7 @@ public class UnitTests {
         DBDAO dao = new DBDAO();
         MessageProcessor mp = new MessageProcessor(dao);
 
-        String response = mp.processMessage(json);
+        String response = mp.processMessage(json, null);
         DataPackage responseDataPackage = mp.jsonToPackage(response);
 
         System.out.println(responseDataPackage.getAction());

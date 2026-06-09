@@ -2,6 +2,8 @@ package flores.caro.model.entities;
 
 import jakarta.persistence.*;
 
+import java.time.Instant;
+
 @Entity
 @Table(name="message")
 public class Message {
@@ -9,6 +11,9 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String text;
+
+    // Sucesor de usar long, clase wrapper con métodos útiles
+    private Instant timestamp;
 
     @ManyToOne
     @JoinColumn(name="chat_id")
@@ -23,8 +28,16 @@ public class Message {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
+    }
+
+    public Instant getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Instant timestamp) {
+        this.timestamp = timestamp;
     }
 
     public String getText() {

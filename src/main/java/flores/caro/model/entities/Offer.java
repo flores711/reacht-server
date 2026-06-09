@@ -33,7 +33,7 @@ public class Offer {
     private Videogame videogame;
 
     // Para guardar instancia de chat en BD tmb al hacer persist de la oferta
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name="chat_id")
     private Chat chat;
 
