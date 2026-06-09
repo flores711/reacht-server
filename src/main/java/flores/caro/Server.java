@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Server {
     private ServerSocket serverSocket;
@@ -17,6 +18,7 @@ public class Server {
     private ExecutorService executor;
     private MessageProcessor messageProcessor;
     private DBDAO dao;
+    private AtomicBoolean running = new AtomicBoolean(true);
 
     private void openServer() {
         loadProperties();
@@ -44,7 +46,7 @@ public class Server {
 
     private void acceptClients() {
         try {
-            while (true) {
+            while (running.get()) {
                 Socket clientHandlerSocket = serverSocket.accept();
                 System.out.println("Client accepted");
 
@@ -56,6 +58,10 @@ public class Server {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void stop() {
+        running.set(false);
     }
 
     static void main() {

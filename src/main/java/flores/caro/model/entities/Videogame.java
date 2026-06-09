@@ -9,16 +9,16 @@ public class Videogame {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String title;
+    private String category;
     private String banner;
 
 
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public String getTitle() {
@@ -35,5 +35,13 @@ public class Videogame {
 
     public void setBanner(String banner) {
         this.banner = banner;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 }

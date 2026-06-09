@@ -12,11 +12,9 @@ public class Offer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name="is_public")
-    private boolean isPublic;
     private String description;
-    @Column(name="is_active")
-    private boolean isActive;
+    @Column(name="is_full")
+    private boolean isFull;
     @Column(name="current_players_count")
     private int currentPlayersCount;
     @Column(name="target_players_count")
@@ -51,14 +49,6 @@ public class Offer {
         this.id = id;
     }
 
-    public boolean isPublic() {
-        return isPublic;
-    }
-
-    public void setPublic(boolean aPublic) {
-        isPublic = aPublic;
-    }
-
     public String getDescription() {
         return description;
     }
@@ -67,12 +57,12 @@ public class Offer {
         this.description = description;
     }
 
-    public boolean isActive() {
-        return isActive;
+    public boolean isFull() {
+        return isFull;
     }
 
-    public void setActive(boolean active) {
-        isActive = active;
+    public void setFull(boolean full) {
+        isFull = full;
     }
 
     public int getCurrentPlayersCount() {

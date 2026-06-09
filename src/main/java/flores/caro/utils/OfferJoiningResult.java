@@ -5,5 +5,6 @@ public enum OfferJoiningResult {
     OFFER_NOT_FOUND,
     USER_NOT_FOUND,
     ALREADY_IN_AN_OFFER,
+    OFFER_FULL,
     DATABASE_ERROR
 }
