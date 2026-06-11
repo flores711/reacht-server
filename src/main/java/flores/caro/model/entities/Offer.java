@@ -21,10 +21,6 @@ public class Offer {
     private int targetPlayersCount;
 
     @ManyToOne
-    @JoinColumn(name="language_id")
-    private Language language;
-
-    @ManyToOne
     @JoinColumn(name="creator_id")
     private User creator;
 
@@ -79,14 +75,6 @@ public class Offer {
 
     public void setTargetPlayersCount(int targetPlayersCount) {
         this.targetPlayersCount = targetPlayersCount;
-    }
-
-    public Language getLanguage() {
-        return language;
-    }
-
-    public void setLanguage(Language language) {
-        this.language = language;
     }
 
     public User getCreator() {

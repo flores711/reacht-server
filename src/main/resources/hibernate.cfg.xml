@@ -20,9 +20,9 @@
 
         <!-- Clases con anotaciones -->
         <mapping class="flores.caro.model.entities.Chat"/>
-        <mapping class="flores.caro.model.entities.Language"/>
         <mapping class="flores.caro.model.entities.Message"/>
         <mapping class="flores.caro.model.entities.Offer"/>
+        <mapping class="flores.caro.model.entities.Role"/>
         <mapping class="flores.caro.model.entities.User"/>
         <mapping class="flores.caro.model.entities.Videogame"/>
     </session-factory>

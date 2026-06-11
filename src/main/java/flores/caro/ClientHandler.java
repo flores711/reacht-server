@@ -2,16 +2,19 @@ package flores.caro;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class ClientHandler implements Runnable {
-    private Socket clientHandlerSocket;
+    private Server server;
+    private Socket clientSocket;
     private MessageProcessor messageProcessor;
     private BufferedReader clientInput;
     private PrintWriter clientOutput;
     private Integer userId;
 
-    public ClientHandler(Socket clientHandlerSocket, MessageProcessor messageProcessor) {
-        this.clientHandlerSocket = clientHandlerSocket;
+    public ClientHandler(Server server, Socket clientSocket, MessageProcessor messageProcessor) {
+        this.server = server;
+        this.clientSocket = clientSocket;
         this.messageProcessor = messageProcessor;
     }
 
@@ -27,8 +30,8 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         try {
-            clientInput = new BufferedReader(new InputStreamReader(clientHandlerSocket.getInputStream()));
-            clientOutput = new PrintWriter(new BufferedWriter(new OutputStreamWriter(clientHandlerSocket.getOutputStream())), true);
+            clientInput = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            clientOutput = new PrintWriter(new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream())), true);
 
             String input;
             String response;
@@ -38,30 +41,31 @@ public class ClientHandler implements Runnable {
                 clientOutput.println(response);
             }
 
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (SocketException e) {
+            System.err.println("Socket exception - client socket closed");
+        } catch (IOException e2) {
+            System.err.println("IOException on ClientHandler thread: " + e2.getMessage());
         } finally {
             if (userId != null) {
                 SessionManager.removeSession(userId);
             }
 
+            if (server != null && clientSocket != null) {
+                server.removeClientSocket(clientSocket);
+            }
+
             try {
-                if (clientHandlerSocket != null)
-                    clientHandlerSocket.close();
+                if (clientInput != null)
+                    clientInput.close();
+                if (clientOutput != null)
+                    clientOutput.close();
+                if (clientSocket != null && !clientSocket.isClosed())
+                    clientSocket.close();
+
                 System.out.println("Client Handler socket closed");
-                clientInput.close();
-                clientOutput.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                System.err.println("Error closing client socket and ClientHandler resources" + e.getMessage());
             }
         }
-    }
-
-    public BufferedReader getClientInput() {
-        return clientInput;
-    }
-
-    public PrintWriter getClientOutput() {
-        return clientOutput;
     }
 }

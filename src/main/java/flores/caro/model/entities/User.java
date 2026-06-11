@@ -13,12 +13,9 @@ public class User {
     @Column(unique = true)
     private String email;
     private String password;
-    private String description;
-    private String profilephoto;
-
     @ManyToOne
-    @JoinColumn(name="preferred_language_id")
-    private Language preferredLaguage;
+    @JoinColumn(name="role_id")
+    private Role role;
 
     @ManyToOne
     @JoinColumn(name="current_offer_id")
@@ -56,28 +53,12 @@ public class User {
         this.password = password;
     }
 
-    public String getDescription() {
-        return description;
+    public Role getRole() {
+        return role;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getProfilephoto() {
-        return profilephoto;
-    }
-
-    public void setProfilephoto(String profilephoto) {
-        this.profilephoto = profilephoto;
-    }
-
-    public Language getPreferredLaguage() {
-        return preferredLaguage;
-    }
-
-    public void setPreferredLaguage(Language preferredLaguage) {
-        this.preferredLaguage = preferredLaguage;
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     public Offer getCurrentOffer() {

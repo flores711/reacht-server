@@ -143,10 +143,9 @@ public class MessageProcessor {
             if (dao.existsUsername(username)) {
                 if (dao.checkCredentials(username, password)) {
                     Integer userId = dao.getUserIdByUsername(username);
-                    response.setAction("LOGIN_SUCCESS");
-                    // String role = dao.getUserRole();
-                    String role = "NORMAL";
+                    String role = dao.getUserRole(userId);
 
+                    response.setAction("LOGIN_SUCCESS");
                     response.setData(Map.of(
                             "message", "Login successful",
                             "user_id", userId,

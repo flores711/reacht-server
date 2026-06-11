@@ -228,6 +228,11 @@ public class DBDAO {
                 newUser.setUsername(username);
                 newUser.setPassword(password);
 
+                Role playerRole = session.createQuery("FROM Role r WHERE r.name = :name", Role.class)
+                        .setParameter("name", "PLAYER")
+                        .uniqueResult();
+                if (playerRole != null) newUser.setRole(playerRole);
+
                 session.persist(newUser);
                 transaction.commit();
                 return true;
@@ -442,9 +447,12 @@ public class DBDAO {
                 if (chat != null && user != null && chat.getUsers().contains(user)) {
                     chat.removeUser(user);
 
+                    // Si ya no quedan usuarios, eliminamos el chat
                     if (chat.getUsers().isEmpty()) {
-                        chat.getOffer().setChat(null);
-                        session.merge(chat.getOffer());
+                        if (chat.getOffer() != null) {
+                            chat.getOffer().setChat(null);
+                            session.merge(chat.getOffer());
+                        }
                         session.remove(chat);
                     }
                     else {
@@ -516,6 +524,17 @@ public class DBDAO {
                 e.printStackTrace();
                 return message;
             }
+        }
+    }
+
+    public String getUserRole(Integer userId) {
+        try (Session session = sessionFactory.openSession()) {
+            User user = session.get(User.class, userId);
+            if (user == null || user.getRole() == null) return "PLAYER";
+            return user.getRole().getName();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "PLAYER";
         }
     }
 }
