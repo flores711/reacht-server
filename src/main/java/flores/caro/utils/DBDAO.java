@@ -17,9 +17,6 @@ public class DBDAO {
         this.sessionFactory = HibernateUtil.getSessionFactory();
     }
 
-    // TODO: Capturar excepciones específicas, no solo Exception
-    // En todo caso al final del todo, de más específicas a menos
-
     // ==============================================
     // *** QUERIES ***
     // ==============================================
@@ -68,16 +65,6 @@ public class DBDAO {
         }
     }
 
-    public boolean userHasActiveOffer(int creatorId) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<Offer> query = session.createQuery("SELECT u.currentOffer FROM User u WHERE u.id = :id", Offer.class);
-            query.setParameter("id", creatorId);
-
-            Offer offer = query.uniqueResult();
-            return offer != null;
-        }
-    }
-
     public Set<User> getChatUsersFromMessage(Message message) {
         try (Session session = sessionFactory.openSession()) {
             Query<User> query = session.createQuery("SELECT users FROM Chat c JOIN c.users users WHERE c.id = :chat_id", User.class);
@@ -96,7 +83,7 @@ public class DBDAO {
 
             return query.list();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("DAO Error: " + e.getMessage());
             return null;
         }
     }
@@ -107,20 +94,22 @@ public class DBDAO {
             query.setParameter("offerId", offerId);
             return query.uniqueResult();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("DAO Error: " + e.getMessage());
             return null;
         }
     }
 
     public List<Chat> getUserChats(Integer userId) {
         try (Session session = sessionFactory.openSession()) {
-            Query<Chat> query = session.createQuery(
-                    "FROM Chat c JOIN c.users u WHERE u.id = :userId",
-                    Chat.class);
+            // Hago subconsulta para obtener el último mensaje de cada chat (MAX(m.timestamp))
+            // Y ordeno los chats en base a eso en orden descendente
+            // Pongo null first para un chat recién creado donde no se haya hablado todavía
+            Query<Chat> query = session.createQuery("FROM Chat c JOIN c.users u WHERE u.id = :userId ORDER BY (" +
+                    "SELECT MAX(m.timestamp) FROM Message m WHERE m.chat = c) DESC NULLS FIRST", Chat.class);
             query.setParameter("userId", userId);
             return query.list();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("DAO Error: " + e.getMessage());
             return null;
         }
     }
@@ -130,13 +119,11 @@ public class DBDAO {
             User user = session.get(User.class, userId);
             if (user == null || user.getCurrentOffer() == null) return null;
 
-            Query<Offer> query = session.createQuery(
-                    "FROM Offer o JOIN FETCH o.videogame JOIN FETCH o.creator WHERE o.id = :offerId",
-                    Offer.class);
+            Query<Offer> query = session.createQuery("FROM Offer o JOIN FETCH o.videogame JOIN FETCH o.creator WHERE o.id = :offerId", Offer.class);
             query.setParameter("offerId", user.getCurrentOffer().getId());
             return query.uniqueResult();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("DAO Error: " + e.getMessage());
             return null;
         }
     }
@@ -147,24 +134,6 @@ public class DBDAO {
             return query.list();
         } catch (Exception e) {
             System.err.println("Internal server error obtaining videogames: " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public List<Offer> getAllOffers(Integer userId) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<Offer> query = session.createQuery("FROM Offer o WHERE o.isFull = false AND o.creator.id != :userId", Offer.class);
-            query.setParameter("userId", userId);
-            query.setMaxResults(100);
-            return query.list();
-        } catch (HibernateException e) {
-            System.err.println("Hibernate error obtaining all offers: " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        } catch (Exception e) {
-            System.err.println("Internal server error obtaining all offers: " + e.getMessage());
-            e.printStackTrace();
             return null;
         }
     }
@@ -172,9 +141,16 @@ public class DBDAO {
     public List<Offer> getFilteredOffers(Integer userId, Integer videogameId, String videogameCategory, String offerMaxTargetPlayers, String offerMinCurrentPlayers) {
         try (Session session = sessionFactory.openSession()) {
 
-            StringBuilder querySB = new StringBuilder("FROM Offer o WHERE o.isFull = false AND o.creator.id != :userId");
+            StringBuilder querySB = new StringBuilder("FROM Offer o WHERE o.isFull = false");
             Map<String, Object> parameters = new HashMap<>();
-            parameters.put("userId", userId);
+
+            // Que no se muestre la oferta actual del usuario, tanto si la ha creado como si se ha unido
+            User user = session.get(User.class, userId);
+            Offer userCurrentOffer = user.getCurrentOffer();
+            if (userCurrentOffer != null) {
+                querySB.append(" AND o.id != :userCurrentOfferId");
+                parameters.put("userCurrentOfferId", user.getCurrentOffer().getId());
+            }
 
             if (videogameId != null) {
                 querySB.append(" AND o.videogame.id = :videogameId");
@@ -193,6 +169,8 @@ public class DBDAO {
                 parameters.put("offerMinCurrentPlayers", offerMinCurrentPlayers);
             }
 
+            // Para que salgan las más recientes primero
+            querySB.append(" ORDER BY o.id DESC");
             Query<Offer> query = session.createQuery(querySB.toString(), Offer.class);
             // Se puede hacer esto porque son exactamente los mismos parámetros en el mismo orden
             parameters.forEach(query::setParameter);
@@ -203,12 +181,10 @@ public class DBDAO {
             return filteredOffers;
         } catch (HibernateException e) {
             System.err.println("Hibernate error obtaining filtered offers: " + e.getMessage());
-            e.printStackTrace();
             return null;
 
         } catch (Exception e) {
             System.err.println("Internal server error obtaining filtered offers: " + e.getMessage());
-            e.printStackTrace();
             return null;
         }
 
@@ -228,9 +204,9 @@ public class DBDAO {
                 newUser.setUsername(username);
                 newUser.setPassword(password);
 
-                Role playerRole = session.createQuery("FROM Role r WHERE r.name = :name", Role.class)
-                        .setParameter("name", "PLAYER")
-                        .uniqueResult();
+                Query<Role> query = session.createQuery("FROM Role r WHERE r.name = :name", Role.class);
+                query.setParameter("name", "PLAYER");
+                Role playerRole = query.uniqueResult();
                 if (playerRole != null) newUser.setRole(playerRole);
 
                 session.persist(newUser);
@@ -242,7 +218,7 @@ public class DBDAO {
                 if (transaction.isActive()) {
                     transaction.rollback();
                 }
-                e.printStackTrace();
+                System.err.println("DAO Error: " + e.getMessage());
                 return false;
             }
         }
@@ -288,7 +264,7 @@ public class DBDAO {
             } catch (Exception e) {
                 if (transaction.isActive())
                     transaction.rollback();
-                e.printStackTrace();
+                System.err.println("DAO Error: " + e.getMessage());
                 return OfferCreationResult.DATABASE_ERROR;
             }
         }
@@ -316,7 +292,7 @@ public class DBDAO {
             } catch (Exception e) {
                 if (transaction.isActive())
                     transaction.rollback();
-                e.printStackTrace();
+                System.err.println("DAO Error: " + e.getMessage());
                 return false;
             }
         }
@@ -367,7 +343,7 @@ public class DBDAO {
             } catch (Exception e) {
                 if (transaction.isActive())
                     transaction.rollback();
-                e.printStackTrace();
+                System.err.println("DAO Error: " + e.getMessage());
                 return OfferJoiningResult.DATABASE_ERROR;
             }
         }
@@ -405,7 +381,7 @@ public class DBDAO {
             } catch (Exception e) {
                 if (transaction.isActive())
                     transaction.rollback();
-                e.printStackTrace();
+                System.err.println("DAO Error: " + e.getMessage());
                 return false;
             }
         }
@@ -430,7 +406,7 @@ public class DBDAO {
 //            } catch (Exception e) {
 //                if (transaction.isActive())
 //                    transaction.rollback();
-//                e.printStackTrace();
+//                System.err.println("DAO Error: " + e.getMessage());
 //                return false;
 //            }
 //        }
@@ -469,7 +445,7 @@ public class DBDAO {
             } catch (Exception e) {
                 if (transaction.isActive())
                     transaction.rollback();
-                e.printStackTrace();
+                System.err.println("DAO Error: " + e.getMessage());
                 return false;
             }
         }
@@ -492,7 +468,7 @@ public class DBDAO {
                 return true;
             } catch (Exception e) {
                 if (transaction.isActive()) transaction.rollback();
-                e.printStackTrace();
+                System.err.println("DAO Error: " + e.getMessage());
                 return false;
             }
         }
@@ -521,7 +497,7 @@ public class DBDAO {
             } catch (Exception e) {
                 if (transaction.isActive())
                     transaction.rollback();
-                e.printStackTrace();
+                System.err.println("DAO Error: " + e.getMessage());
                 return message;
             }
         }
@@ -533,7 +509,7 @@ public class DBDAO {
             if (user == null || user.getRole() == null) return "PLAYER";
             return user.getRole().getName();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("DAO Error: " + e.getMessage());
             return "PLAYER";
         }
     }

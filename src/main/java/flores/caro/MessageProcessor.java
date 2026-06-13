@@ -133,23 +133,27 @@ public class MessageProcessor {
             String username = (String) requestPackage.getData().get("username");
             String password = (String) requestPackage.getData().get("password");
 
-            // TODO: this has to be a separate thread
             if (dao.existsUsername(username)) {
                 if (dao.checkCredentials(username, password)) {
                     Integer userId = dao.getUserIdByUsername(username);
-                    String role = dao.getUserRole(userId);
 
-                    response.setAction("LOGIN_SUCCESS");
-                    response.setData(Map.of(
-                            "message", "Login successful",
-                            "user_id", userId,
-                            "username", username,
-                            "role", role
-                    ));
+                    if (SessionManager.getSession(userId) == null) {
+                        String role = dao.getUserRole(userId);
 
-                    SessionManager.addSession(userId, clientHandler);
-                    clientHandler.setUserId(userId);
+                        response.setAction("LOGIN_SUCCESS");
+                        response.setData(Map.of(
+                                "message", "Login successful",
+                                "user_id", userId,
+                                "username", username,
+                                "role", role
+                        ));
 
+                        SessionManager.addSession(userId, clientHandler);
+                        clientHandler.setUserId(userId);
+                    } else {
+                        response.setAction("LOGIN_ERROR");
+                        response.setData(Map.of("message", "User already has an active session"));
+                    }
                 } else {
                     response.setAction("LOGIN_ERROR");
                     response.setData(Map.of("message", "Wrong password for this username"));
@@ -195,8 +199,8 @@ public class MessageProcessor {
                 response.setAction("SIGNUP_SUCCESS");
                 response.setData(Map.of("message", "Account created successfully"));
             } else {
-                // TODO: Cómo hago esto?
-                throw new Exception();
+                response.setAction("SIGNUP_ERROR");
+                response.setData(Map.of("message", "Error trying to create account"));
             }
 
         } catch (ClassCastException e) {
@@ -317,9 +321,6 @@ public class MessageProcessor {
     private DataPackage joinOffer(DataPackage requestPackage) {
         DataPackage response = new DataPackage();
 
-        // TODO: SOLO SI LA OFERTA NO ESTÁ LLENA
-        // TODO: Cambiar flag de oferta llena si hay target players
-
         try {
             Integer offerId = (Integer) requestPackage.getData().get("offer_id");
             Integer userId = (Integer) requestPackage.getData().get("user_id");
@@ -400,15 +401,12 @@ public class MessageProcessor {
             // Filters tiene como valor un json anidado con cada filtro específico
             Map<String, Object> filters = (Map<String, Object>) requestPackage.getData().get("filters");
             // Si es null es que no hay ningún filtro, buscamos todas las ofertas
-            if (filters == null) {
-                offers = dao.getAllOffers(userId);
-            } else {
-                Integer videogameId = (Integer) filters.get("videogame_id");
-                String videogameCategory = (String) filters.get("videogame_category");
-                String offerMaxTargetPlayers = (String) filters.get("max_target_players");
-                String offerMinCurrentPlayers = (String) filters.get("min_current_players");
-                offers = dao.getFilteredOffers(userId, videogameId, videogameCategory, offerMaxTargetPlayers, offerMinCurrentPlayers);
-            }
+
+            Integer videogameId = (Integer) filters.get("videogame_id");
+            String videogameCategory = (String) filters.get("videogame_category");
+            String offerMaxTargetPlayers = (String) filters.get("max_target_players");
+            String offerMinCurrentPlayers = (String) filters.get("min_current_players");
+            offers = dao.getFilteredOffers(userId, videogameId, videogameCategory, offerMaxTargetPlayers, offerMinCurrentPlayers);
 
             if (offers != null) {
                 List<Map<String, Object>> offersData = new ArrayList<>();
@@ -517,7 +515,7 @@ public class MessageProcessor {
                 "user_username", message.getUser().getUsername()
         ));
 
-        // Broadcast A TODO EL MUNDO, incluyendo el emisor
+        // Broadcast A TÓDO EL MUNDO, incluyendo el emisor
         for (User user : users) {
             ClientHandler clientHandler = SessionManager.getSession(user.getId());
             if (clientHandler != null)

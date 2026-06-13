@@ -48,6 +48,7 @@ public class ClientHandler implements Runnable {
         } finally {
             if (userId != null) {
                 SessionManager.removeSession(userId);
+                System.out.println("Removed user session from SessionManager");
             }
 
             if (server != null && clientSocket != null) {
