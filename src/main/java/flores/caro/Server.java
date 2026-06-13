@@ -26,6 +26,7 @@ public class Server {
     private Set<Socket> clientSockets = Collections.synchronizedSet(new HashSet<>());
     private AtomicBoolean running = new AtomicBoolean(true);
 
+    // Relanzar las excepciones aqui y capturar en el main
     public Server() {
         loadProperties();
         dao = new DBDAO();
@@ -138,13 +139,19 @@ public class Server {
     }
 
     public static void main(String[] args) {
-        Server server = new Server();
+        try {
+            Server server = new Server();
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("Shutdown Hook executed");
-            server.stop();
-        }));
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                System.out.println("Shutdown Hook executed");
+                server.stop();
+            }));
 
-        server.acceptClients();
+            server.acceptClients();
+
+        // Capturar aqui excepciones y mostrar mensaje por pantalla
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 }

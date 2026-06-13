@@ -52,12 +52,6 @@ public class MessageProcessor {
             case "GET_VIDEOGAMES":
                 responsePackage = getVideogames();
                 break;
-            case "FRIEND_REQUEST":
-                // TODO
-                break;
-            case "FRIEND_REQUEST_ACCEPT":
-                // TODO
-                break;
             case "LEAVE_CHAT":
                 responsePackage = leaveChat(requestPackage);
                 break;
@@ -166,7 +160,7 @@ public class MessageProcessor {
             }
 
         } catch (ClassCastException e) {
-            System.err.println("CLASS CAST EXCEPTION ON LOG IN");
+            System.err.println("Class cast exception on login" + e.getMessage());
             response.setAction("LOGIN_ERROR");
             response.setData(Map.of("message", "Invalid data format received"));
         }
@@ -201,12 +195,12 @@ public class MessageProcessor {
                 response.setAction("SIGNUP_SUCCESS");
                 response.setData(Map.of("message", "Account created successfully"));
             } else {
-                // TODO: Esto está bien?
+                // TODO: Cómo hago esto?
                 throw new Exception();
             }
 
         } catch (ClassCastException e) {
-            System.err.println("CLASS CAST EXCEPTION ON SIGN UP");
+            System.err.println("Class cast exception on signup" + e.getMessage());
             response.setAction("SIGNUP_ERROR");
             response.setData(Map.of("message", "Invalid data format received"));
         } catch (Exception e) {
@@ -523,6 +517,7 @@ public class MessageProcessor {
                 "user_username", message.getUser().getUsername()
         ));
 
+        // Broadcast A TODO EL MUNDO, incluyendo el emisor
         for (User user : users) {
             ClientHandler clientHandler = SessionManager.getSession(user.getId());
             if (clientHandler != null)

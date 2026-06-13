@@ -2,9 +2,10 @@ package flores.caro;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-/* Mapa de UserId en base de datos con su ClientHandler en el servidor */
+// Mapa de UserId en base de datos con su ClientHandler en el servidor
+// Guardamos id para no guardar usuarios desactualizados
+// Usado principalmente para el broadcast de mensajes de chat
 public class SessionManager {
-    // Usar User en vezz de id (mirar)
     private static final ConcurrentHashMap<Integer, ClientHandler> activeSessions = new ConcurrentHashMap<>();
 
     public static void addSession(Integer userId, ClientHandler handler) {
