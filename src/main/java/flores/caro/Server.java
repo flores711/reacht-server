@@ -49,18 +49,18 @@ public class Server {
             String poolSize = properties.getProperty("threadPoolSize");
 
             if (port == null || poolSize == null) {
-                throw new IllegalArgumentException("Critical server error: required properties not found on server properties file");
+                throw new IllegalArgumentException("Critical server error: required properties not found on server properties file. Could not open server.");
             }
 
             serverPort = Integer.parseInt(port);
             threadPoolSize = Integer.parseInt(poolSize);
 
         } catch (FileNotFoundException e) {
-            throw new IllegalStateException("Critical server error: server properties file not found", e);
+            throw new IllegalStateException("Critical server error: server properties file not found. Could not open server.");
         } catch (IOException e) {
-            throw new RuntimeException("Critical server error: error reading server properties file", e);
+            throw new RuntimeException("Critical server error: error reading server properties file. Could not open server.");
         } catch (NumberFormatException e) { // Del parseInt
-            throw new RuntimeException("Critical server error: server properties do not have valid number format", e);
+            throw new RuntimeException("Critical server error: server properties do not have valid number format. Could not open server.");
         }
     }
 
@@ -79,7 +79,7 @@ public class Server {
             if (!running.get()) {
                 System.err.println("Accept clients loop closed due to server shutdown");
             } else {
-                System.err.println("Unexpected clients loop closed");
+                System.err.println("Unexpected clients loop closed: " + e.getMessage());
             }
         }
     }
@@ -151,7 +151,7 @@ public class Server {
 
         // Capturar aqui excepciones y mostrar mensaje por pantalla
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
         }
     }
 }

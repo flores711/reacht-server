@@ -243,6 +243,7 @@ public class MessageProcessor {
                 response.setData(Map.of("videogames", videogameList));
             }
         } catch (Exception e) {
+            System.err.println("MessageProcessor - getVideogames() error: " + e.getMessage());
             response.setAction("GET_VIDEOGAMES_ERROR");
             response.setData(Map.of("message", "Internal server error retrieving videogames"));
         }
@@ -288,9 +289,13 @@ public class MessageProcessor {
                     break;
             }
 
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             response.setAction("CREATE_OFFER_ERROR");
-            response.setData(Map.of("message", "Invalid arguments types received for offer"));
+            response.setData(Map.of("message", "Invalid data format received for offer"));
+        } catch (Exception e) {
+            System.err.println("MessageProcessor - createOffer() error: " + e.getMessage());
+            response.setAction("CREATE_OFFER_ERROR");
+            response.setData(Map.of("message", "Internal server error creating offer"));
         }
 
         return response;
@@ -310,9 +315,13 @@ public class MessageProcessor {
                 response.setData(Map.of("message", "Error deleting the offer"));
             }
 
-        } catch (Exception e) {
+        } catch (ClassCastException e) {
             response.setAction("DELETE_OFFER_ERROR");
-            response.setData(Map.of("message", "Invalid arguments types received for delete offer"));
+            response.setData(Map.of("message", "Invalid data format received for delete offer"));
+        } catch (Exception e) {
+            System.err.println("MessageProcessor - deleteOffer() error: " + e.getMessage());
+            response.setAction("DELETE_OFFER_ERROR");
+            response.setData(Map.of("message", "Internal server error deleting offer"));
         }
 
         return response;
@@ -359,9 +368,13 @@ public class MessageProcessor {
                     break;
             }
 
-        } catch (Exception e) {
+        } catch (ClassCastException e) {
             response.setAction("JOIN_OFFER_ERROR");
-            response.setData(Map.of("message", "Invalid arguments types received for join offer"));
+            response.setData(Map.of("message", "Invalid data format received for join offer"));
+        } catch (Exception e) {
+            System.err.println("MessageProcessor - joinOffer() error: " + e.getMessage());
+            response.setAction("JOIN_OFFER_ERROR");
+            response.setData(Map.of("message", "Internal server error joining offer"));
         }
 
         return response;
@@ -382,9 +395,13 @@ public class MessageProcessor {
                 response.setData(Map.of("message", "Error trying to leave the offer"));
             }
 
-        } catch (Exception e) {
+        } catch (ClassCastException e) {
             response.setAction("LEAVE_OFFER_ERROR");
-            response.setData(Map.of("message", "Invalid arguments types received for leave offer"));
+            response.setData(Map.of("message", "Invalid data format received for leave offer"));
+        } catch (Exception e) {
+            System.err.println("MessageProcessor - leaveOffer() error: " + e.getMessage());
+            response.setAction("LEAVE_OFFER_ERROR");
+            response.setData(Map.of("message", "Internal server error leaving offer"));
         }
 
         return response;
@@ -441,7 +458,6 @@ public class MessageProcessor {
         } catch (Exception e) {
             // Final safety net for completely unexpected runtime issues
             System.err.println("Unexpected error during search: " + e.getMessage());
-            e.printStackTrace();
             response.setAction("SEARCH_OFFERS_ERROR");
             response.setData(Map.of("message", "Internal server error searching offers"));
         }
@@ -470,9 +486,13 @@ public class MessageProcessor {
                 response.setData(Map.of("message", "Error trying to leave the chat"));
             }
 
-        } catch (Exception e) {
+        } catch (ClassCastException e) {
             response.setAction("LEAVE_CHAT_ERROR");
-            response.setData(Map.of("message", "Invalid arguments types received for leave chat"));
+            response.setData(Map.of("message", "Invalid data format received for leave chat"));
+        } catch (Exception e) {
+            System.err.println("MessageProcessor - leaveChat() error: " + e.getMessage());
+            response.setAction("LEAVE_CHAT_ERROR");
+            response.setData(Map.of("message", "Internal server error leaving chat"));
         }
 
         return response;
@@ -494,34 +514,46 @@ public class MessageProcessor {
         } catch (IllegalArgumentException | MismatchedInputException e) {
             response.setAction("SEND_MESSAGE_ERROR");
             response.setData(Map.of("message", "Invalid data format received for message"));
+        } catch (Exception e) {
+            System.err.println("MessageProcessor - sendMessage() error: " + e.getMessage());
+            response.setAction("GET_USER_CHATS_ERROR");
+            response.setData(Map.of("message", "Internal server error trying to send message"));
         }
 
         return response;
     }
 
     private void broadcastChat(Message message) {
-        Set<User> users = dao.getChatUsersFromMessage(message);
+        try {
+            Set<User> users = dao.getChatUsersFromMessage(message);
+            if (users == null) {
+                System.err.println("MessageProcessor - broadcastChat() error: could not retrieve chat users");
+                return;
+            }
 
-        DataPackage broadcastPackage = new DataPackage();
-        broadcastPackage.setAction("NEW_CHAT_MESSAGE");
-        // Hecho así para evitar bucles de JSON (Message -> Chat -> Messages/Offer -> Chat // User -> Offer...
-        // y para no enviar datos innecesarios
-        broadcastPackage.setData(Map.of(
-                "message_id", message.getId(),
-                "user_id", message.getUser().getId(),
-                "chat_id", message.getChat().getId(),
-                "timestamp", message.getTimestamp(),
-                "text", message.getText(),
-                "user_username", message.getUser().getUsername()
-        ));
+            DataPackage broadcastPackage = new DataPackage();
+            broadcastPackage.setAction("NEW_CHAT_MESSAGE");
+            // Hecho así para evitar bucles de JSON (Message -> Chat -> Messages/Offer -> Chat // User -> Offer...
+            // y para no enviar datos innecesarios
+            broadcastPackage.setData(Map.of(
+                    "message_id", message.getId(),
+                    "user_id", message.getUser().getId(),
+                    "chat_id", message.getChat().getId(),
+                    "timestamp", message.getTimestamp(),
+                    "text", message.getText(),
+                    "user_username", message.getUser().getUsername()
+            ));
 
-        // Broadcast A TÓDO EL MUNDO, incluyendo el emisor
-        for (User user : users) {
-            ClientHandler clientHandler = SessionManager.getSession(user.getId());
-            if (clientHandler != null)
-                clientHandler.sendMessage(packageToJson(broadcastPackage));
+            // Broadcast A TÓDO EL MUNDO, incluyendo el emisor
+            for (User user : users) {
+                ClientHandler clientHandler = SessionManager.getSession(user.getId());
+                if (clientHandler != null)
+                    clientHandler.sendMessage(packageToJson(broadcastPackage));
+            }
+
+        } catch (Exception e) {
+            System.err.println("MessagerProcessor: error broadcasting chat: " + e.getMessage());
         }
-
     }
 
     private DataPackage getUserChats(DataPackage requestPackage) {
@@ -550,10 +582,11 @@ public class MessageProcessor {
 
         } catch (ClassCastException e) {
             response.setAction("GET_USER_CHATS_ERROR");
-            response.setData(Map.of("message", "Invalid format for get user chats"));
+            response.setData(Map.of("message", "Invalid data format received for get user chats"));
         } catch (Exception e) {
+            System.err.println("MessageProcessor - getUserChats() error: " + e.getMessage());
             response.setAction("GET_USER_CHATS_ERROR");
-            response.setData(Map.of("message", "Internal error trying to get user chats"));
+            response.setData(Map.of("message", "Internal server error trying to get user chats"));
         }
 
         return response;
@@ -585,10 +618,11 @@ public class MessageProcessor {
 
         } catch (ClassCastException e) {
             response.setAction("GET_CURRENT_OFFER_ERROR");
-            response.setData(Map.of("message", "Invalid format for get current offer"));
+            response.setData(Map.of("message", "Invalid data format received for get current offer"));
         } catch (Exception e) {
+            System.err.println("MessageProcessor - getCurrentOffer() error: " + e.getMessage());
             response.setAction("GET_CURRENT_OFFER_ERROR");
-            response.setData(Map.of("message", "Internal error trying to get current offer"));
+            response.setData(Map.of("message", "Internal server error trying to get current offer"));
         }
 
         return response;
@@ -619,10 +653,11 @@ public class MessageProcessor {
 
         } catch (ClassCastException e) {
             response.setAction("GET_USER_DATA_ERROR");
-            response.setData(Map.of("message", "Invalid format for get user data"));
+            response.setData(Map.of("message", "Invalid data format received for get user data"));
         } catch (Exception e) {
+            System.err.println("MessageProcessor - getUserData() error: " + e.getMessage());
             response.setAction("GET_USER_DATA_ERROR");
-            response.setData(Map.of("message", "Internal error trying to get user data"));
+            response.setData(Map.of("message", "Internal server error trying to get user data"));
         }
 
         return response;
@@ -666,15 +701,16 @@ public class MessageProcessor {
                 response.setData(Map.of("message", "User updated successfully"));
             } else {
                 response.setAction("UPDATE_USER_ERROR");
-                response.setData(Map.of("message", "Internal error updating user"));
+                response.setData(Map.of("message", "Error trying to update user"));
             }
 
         } catch (ClassCastException e) {
             response.setAction("UPDATE_USER_ERROR");
-            response.setData(Map.of("message", "Invalid format for update user"));
+            response.setData(Map.of("message", "Invalid data format received for update user"));
         } catch (Exception e) {
+            System.err.println("MessageProcessor - updateUser() error: " + e.getMessage());
             response.setAction("UPDATE_USER_ERROR");
-            response.setData(Map.of("message", "Internal error trying to update user"));
+            response.setData(Map.of("message", "Internal server error trying to update user"));
         }
 
         return response;
@@ -712,10 +748,11 @@ public class MessageProcessor {
 
         } catch (ClassCastException e) {
             response.setAction("GET_CHAT_HISTORY_ERROR");
-            response.setData(Map.of("message", "Invalid format requested for chat history"));
+            response.setData(Map.of("message", "Invalid data format received for chat history"));
         } catch (Exception e) {
+            System.err.println("MessageProcessor - getChatHistory() error: " + e.getMessage());
             response.setAction("GET_CHAT_HISTORY_ERROR");
-            response.setData(Map.of("message", "Internal error trying to get chat history"));
+            response.setData(Map.of("message", "Internal server error trying to get chat history"));
         }
 
         return response;

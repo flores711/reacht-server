@@ -42,7 +42,7 @@ public class ClientHandler implements Runnable {
             }
 
         } catch (SocketException e) {
-            System.err.println("Socket exception - client socket closed");
+            System.err.println("Socket exception - client socket closed: " + e.getMessage());
         } catch (IOException e2) {
             System.err.println("IOException on ClientHandler thread: " + e2.getMessage());
         } finally {
@@ -65,7 +65,7 @@ public class ClientHandler implements Runnable {
 
                 System.out.println("Client Handler socket closed");
             } catch (IOException e) {
-                System.err.println("Error closing client socket and ClientHandler resources" + e.getMessage());
+                System.err.println("Error closing client socket and ClientHandler resources: " + e.getMessage());
             }
         }
     }

@@ -82,8 +82,11 @@ public class DBDAO {
             query.setParameter("chatId", chatId);
 
             return query.list();
+        } catch (HibernateException e) {
+            System.err.println("DBDAO - getChatHistory() Hibernate error: " + e.getMessage());
+            return null;
         } catch (Exception e) {
-            System.err.println("DAO Error: " + e.getMessage());
+            System.err.println("DBDAO - getChatHistory() error: " + e.getMessage());
             return null;
         }
     }
@@ -93,8 +96,11 @@ public class DBDAO {
             Query<Chat> query = session.createQuery("SELECT o.chat FROM Offer o WHERE o.id = :offerId", Chat.class);
             query.setParameter("offerId", offerId);
             return query.uniqueResult();
+        } catch (HibernateException e) {
+            System.err.println("DBDAO - getOfferChat() Hibernate error: " + e.getMessage());
+            return null;
         } catch (Exception e) {
-            System.err.println("DAO Error: " + e.getMessage());
+            System.err.println("DBDAO - getOfferChat() error: " + e.getMessage());
             return null;
         }
     }
@@ -108,8 +114,11 @@ public class DBDAO {
                     "SELECT MAX(m.timestamp) FROM Message m WHERE m.chat = c) DESC NULLS FIRST", Chat.class);
             query.setParameter("userId", userId);
             return query.list();
+        } catch (HibernateException e) {
+            System.err.println("DBDAO - getUserChats() Hibernate error: " + e.getMessage());
+            return null;
         } catch (Exception e) {
-            System.err.println("DAO Error: " + e.getMessage());
+            System.err.println("DBDAO - getUserChats() error: " + e.getMessage());
             return null;
         }
     }
@@ -122,8 +131,11 @@ public class DBDAO {
             Query<Offer> query = session.createQuery("FROM Offer o JOIN FETCH o.videogame JOIN FETCH o.creator WHERE o.id = :offerId", Offer.class);
             query.setParameter("offerId", user.getCurrentOffer().getId());
             return query.uniqueResult();
+        } catch (HibernateException e) {
+            System.err.println("DBDAO - getCurrentOffer() Hibernate error: " + e.getMessage());
+            return null;
         } catch (Exception e) {
-            System.err.println("DAO Error: " + e.getMessage());
+            System.err.println("DBDAO - getCurrentOffer() error: " + e.getMessage());
             return null;
         }
     }
@@ -132,8 +144,11 @@ public class DBDAO {
         try (Session session = sessionFactory.openSession()) {
             Query<Videogame> query = session.createQuery("FROM Videogame v ORDER BY v.title", Videogame.class);
             return query.list();
+        } catch (HibernateException e) {
+            System.err.println("DBDAO - getVideogames() Hibernate error: " + e.getMessage());
+            return null;
         } catch (Exception e) {
-            System.err.println("Internal server error obtaining videogames: " + e.getMessage());
+            System.err.println("DBDAO - getVideogames() error: " + e.getMessage());
             return null;
         }
     }
@@ -176,18 +191,15 @@ public class DBDAO {
             parameters.forEach(query::setParameter);
             query.setMaxResults(100);
 
-            List<Offer> filteredOffers = query.list();
+            return query.list();
 
-            return filteredOffers;
         } catch (HibernateException e) {
-            System.err.println("Hibernate error obtaining filtered offers: " + e.getMessage());
+            System.err.println("DBDAO - getFilteredOffers() Hibernate error: " + e.getMessage());
             return null;
-
         } catch (Exception e) {
-            System.err.println("Internal server error obtaining filtered offers: " + e.getMessage());
+            System.err.println("DBDAO - getFilteredOffers() error: " + e.getMessage());
             return null;
         }
-
     }
 
 
@@ -213,12 +225,19 @@ public class DBDAO {
                 transaction.commit();
                 return true;
 
+            } catch (HibernateException e) {
+                // Si falla hacemos rollback para deshacer cualquier cambio a medias
+                if (transaction.isActive()) {
+                    transaction.rollback();
+                }
+                System.err.println("DBDAO - registerUser() Hibernate error: " + e.getMessage());
+                return false;
             } catch (Exception e) {
                 // Si falla hacemos rollback para deshacer cualquier cambio a medias
                 if (transaction.isActive()) {
                     transaction.rollback();
                 }
-                System.err.println("DAO Error: " + e.getMessage());
+                System.err.println("DBDAO - registerUser() error: " + e.getMessage());
                 return false;
             }
         }
@@ -261,10 +280,15 @@ public class DBDAO {
 
                 return result;
 
+            } catch (HibernateException e) {
+                if (transaction.isActive())
+                    transaction.rollback();
+                System.err.println("DBDAO - createOffer() Hibernate error: " + e.getMessage());
+                return OfferCreationResult.DATABASE_ERROR;
             } catch (Exception e) {
                 if (transaction.isActive())
                     transaction.rollback();
-                System.err.println("DAO Error: " + e.getMessage());
+                System.err.println("DBDAO - createOffer() error: " + e.getMessage());
                 return OfferCreationResult.DATABASE_ERROR;
             }
         }
@@ -289,10 +313,15 @@ public class DBDAO {
                     return false;
                 }
 
+            } catch (HibernateException e) {
+                if (transaction.isActive())
+                    transaction.rollback();
+                System.err.println("DBDAO - deleteOffer() Hibernate error: " + e.getMessage());
+                return false;
             } catch (Exception e) {
                 if (transaction.isActive())
                     transaction.rollback();
-                System.err.println("DAO Error: " + e.getMessage());
+                System.err.println("DBDAO - deleteOffer() error: " + e.getMessage());
                 return false;
             }
         }
@@ -340,10 +369,15 @@ public class DBDAO {
 
                 return result;
 
+            } catch (HibernateException e) {
+                if (transaction.isActive())
+                    transaction.rollback();
+                System.err.println("DBDAO - joinOffer() Hibernate error: " + e.getMessage());
+                return OfferJoiningResult.DATABASE_ERROR;
             } catch (Exception e) {
                 if (transaction.isActive())
                     transaction.rollback();
-                System.err.println("DAO Error: " + e.getMessage());
+                System.err.println("DBDAO - joinOffer() error: " + e.getMessage());
                 return OfferJoiningResult.DATABASE_ERROR;
             }
         }
@@ -378,10 +412,15 @@ public class DBDAO {
                     return false;
                 }
 
+            } catch (HibernateException e) {
+                if (transaction.isActive())
+                    transaction.rollback();
+                System.err.println("DBDAO - leaveOffer() Hibernate error: " + e.getMessage());
+                return false;
             } catch (Exception e) {
                 if (transaction.isActive())
                     transaction.rollback();
-                System.err.println("DAO Error: " + e.getMessage());
+                System.err.println("DBDAO - leaveOffer() error: " + e.getMessage());
                 return false;
             }
         }
@@ -442,10 +481,15 @@ public class DBDAO {
                     return false;
                 }
 
+            } catch (HibernateException e) {
+                if (transaction.isActive())
+                    transaction.rollback();
+                System.err.println("DBDAO - leaveChat() Hibernate error: " + e.getMessage());
+                return false;
             } catch (Exception e) {
                 if (transaction.isActive())
                     transaction.rollback();
-                System.err.println("DAO Error: " + e.getMessage());
+                System.err.println("DBDAO - leaveChat() error: " + e.getMessage());
                 return false;
             }
         }
@@ -466,9 +510,13 @@ public class DBDAO {
                 session.merge(user);
                 transaction.commit();
                 return true;
+            } catch (HibernateException e) {
+                if (transaction.isActive()) transaction.rollback();
+                System.err.println("DBDAO - updateUser() Hibernate error: " + e.getMessage());
+                return false;
             } catch (Exception e) {
                 if (transaction.isActive()) transaction.rollback();
-                System.err.println("DAO Error: " + e.getMessage());
+                System.err.println("DBDAO - updateUser() error: " + e.getMessage());
                 return false;
             }
         }
@@ -494,10 +542,15 @@ public class DBDAO {
                 }
                 return message;
 
+            } catch (HibernateException e) {
+                if (transaction.isActive())
+                    transaction.rollback();
+                System.err.println("DBDAO - registerMessage() Hibernate error: " + e.getMessage());
+                return message;
             } catch (Exception e) {
                 if (transaction.isActive())
                     transaction.rollback();
-                System.err.println("DAO Error: " + e.getMessage());
+                System.err.println("DBDAO - registerMessage() error: " + e.getMessage());
                 return message;
             }
         }
@@ -508,8 +561,11 @@ public class DBDAO {
             User user = session.get(User.class, userId);
             if (user == null || user.getRole() == null) return "PLAYER";
             return user.getRole().getName();
+        } catch (HibernateException e) {
+            System.err.println("DBDAO - getUserRole() Hibernate error: " + e.getMessage());
+            return "PLAYER";
         } catch (Exception e) {
-            System.err.println("DAO Error: " + e.getMessage());
+            System.err.println("DBDAO - getUserRole() error: " + e.getMessage());
             return "PLAYER";
         }
     }
