@@ -35,14 +35,13 @@ public class ClientHandler implements Runnable {
 
             String input;
             String response;
-            // DataInputStream y DataOutputStream (?)
             while ((input = clientInput.readLine()) != null) {
                 response = messageProcessor.processMessage(input, this);
                 clientOutput.println(response);
             }
 
         } catch (SocketException e) {
-            System.err.println("Socket exception - client socket closed: " + e.getMessage());
+            System.out.println("ClientHandler socket closed: " + e.getMessage());
         } catch (IOException e2) {
             System.err.println("IOException on ClientHandler thread: " + e2.getMessage());
         } finally {
@@ -63,7 +62,7 @@ public class ClientHandler implements Runnable {
                 if (clientSocket != null && !clientSocket.isClosed())
                     clientSocket.close();
 
-                System.out.println("Client Handler socket closed");
+                System.out.println("ClientHandler socket closed");
             } catch (IOException e) {
                 System.err.println("Error closing client socket and ClientHandler resources: " + e.getMessage());
             }

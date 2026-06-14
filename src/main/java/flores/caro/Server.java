@@ -7,16 +7,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class Server {
+public class Server implements Runnable {
     private ServerSocket serverSocket;
     private int serverPort;
     private int threadPoolSize;
@@ -64,6 +61,11 @@ public class Server {
         }
     }
 
+    @Override
+    public void run() {
+        acceptClients();
+    }
+
     private void acceptClients() {
         try {
             while (running.get()) {
@@ -77,7 +79,7 @@ public class Server {
             }
         } catch (IOException e) {
             if (!running.get()) {
-                System.err.println("Accept clients loop closed due to server shutdown");
+                System.out.println("Accept clients loop closed due to server shutdown");
             } else {
                 System.err.println("Unexpected clients loop closed: " + e.getMessage());
             }
@@ -89,9 +91,15 @@ public class Server {
     }
 
     private void stop() {
+        // Para evitar que se ejecute una segunda vez con el shutdownHook después de hacer stop() controladamente desde terminal
+        // Solo se ejecuta el método si running es true, si no hace return
+        // Si es true, lo pone a false y devuelve true (no entra dentro del if por ! -> true)
+        // Si es false, devuelve false y entra dentro del if por ! -> true
+        if (!running.compareAndSet(true, false)) {
+            return;
+        }
+
         System.out.println("Shutting server down...");
-        // Cortamos el hilo de acceptclients
-        running.set(false);
 
         // Cerramos server socket para que no acepte más clientes
         try {
@@ -135,19 +143,38 @@ public class Server {
                 executor.shutdownNow();
             }
         }
-
     }
 
     public static void main(String[] args) {
         try {
             Server server = new Server();
 
+            // Si se crea el objeto servidor (es decir, no ha habido ningún fallo en socket, loadProperties...
+            // lanzamos el hilo para aceptar clientes
+            // Así no bloqueamos el hilo prinicipal y podemos hacer funcionalidad de leer teclado,
+            // para poder cerrar el servidor manualmente escribiendo "S" por terminal
+            Thread serverThread = new Thread(server);
+            serverThread.start();
+
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                System.out.println("Shutdown Hook executed");
                 server.stop();
             }));
 
-            server.acceptClients();
+            Scanner sc = new Scanner(System.in);
+            System.out.println("===== Write 'S' and press Enter to Stop server =====");
+
+            while (true) {
+                String input = sc.next();
+                if (input.equalsIgnoreCase("S")) {
+                    break;
+                }
+            }
+
+            // Si ha escrito "S", llamamos a stop y esperamos a que el hilo termine también
+            server.stop();
+            serverThread.join();
+
+            System.out.println("Server stopped successfully by user");
 
         // Capturar aqui excepciones y mostrar mensaje por pantalla
         } catch (Exception e) {

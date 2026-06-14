@@ -180,21 +180,21 @@ public class MessageProcessor {
             String username = (String) requestPackage.getData().get("username");
             String password = (String) requestPackage.getData().get("password");
 
-            // Check email isolated
+            // Comprobar email aislado
             if (dao.existsEmail(email)) {
                 response.setAction("SIGNUP_ERROR");
                 response.setData(Map.of("message", "Email is already registered"));
                 return response;
             }
 
-            // Check username isolated
+            // Comprobar username aislado
             if (dao.existsUsername(username)) {
                 response.setAction("SIGNUP_ERROR");
                 response.setData(Map.of("message", "Username is already taken"));
                 return response;
             }
 
-            // Register if both checks pass
+            // Registramos si ambas comprobaciones pasan
             if (dao.registerUser(email, username, password)) {
                 response.setAction("SIGNUP_SUCCESS");
                 response.setData(Map.of("message", "Account created successfully"));
@@ -255,8 +255,6 @@ public class MessageProcessor {
     // *** OFFERS ***
     // =====================================================
 
-    // Recordar en cliente mandar "creator": {"id": "1"}
-    // Mandar creator como objeto User con atributo id solo, pero no "creator_id": "1"
     private DataPackage createOffer(DataPackage requestPackage) {
         DataPackage response = new DataPackage();
 
@@ -408,7 +406,7 @@ public class MessageProcessor {
     }
 
     // Sólo las ofertas que no estén llenas
-    // Y que no sean las del propio usuario
+    // Y que no sean la currentOffer del propio usuario
     private DataPackage searchOffers(DataPackage requestPackage) {
         DataPackage response = new DataPackage();
 
@@ -417,12 +415,12 @@ public class MessageProcessor {
             Integer userId = (Integer) requestPackage.getData().get("user_id");
             // Filters tiene como valor un json anidado con cada filtro específico
             Map<String, Object> filters = (Map<String, Object>) requestPackage.getData().get("filters");
-            // Si es null es que no hay ningún filtro, buscamos todas las ofertas
 
             Integer videogameId = (Integer) filters.get("videogame_id");
             String videogameCategory = (String) filters.get("videogame_category");
             String offerMaxTargetPlayers = (String) filters.get("max_target_players");
             String offerMinCurrentPlayers = (String) filters.get("min_current_players");
+
             offers = dao.getFilteredOffers(userId, videogameId, videogameCategory, offerMaxTargetPlayers, offerMinCurrentPlayers);
 
             if (offers != null) {
@@ -503,7 +501,7 @@ public class MessageProcessor {
 
         try {
             Message message = objectMapper.convertValue(requestPackage.getData(), Message.class);
-            message.setTimestamp(Instant.now());
+            message.setTimestamp(Instant.now());    // Asignamos timestamp en tiempo real al mensaje
 
             Message realMessage = dao.registerMessage(message); // Habiendo asignado el usuario y el chat reales
             broadcastChat(realMessage);
@@ -533,7 +531,7 @@ public class MessageProcessor {
 
             DataPackage broadcastPackage = new DataPackage();
             broadcastPackage.setAction("NEW_CHAT_MESSAGE");
-            // Hecho así para evitar bucles de JSON (Message -> Chat -> Messages/Offer -> Chat // User -> Offer...
+            // Datos individuales y no objetos para evitar bucles de JSON (Message -> Chat -> Messages/Offer -> Chat // User -> Offer...
             // y para no enviar datos innecesarios
             broadcastPackage.setData(Map.of(
                     "message_id", message.getId(),

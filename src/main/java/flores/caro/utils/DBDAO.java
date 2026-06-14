@@ -233,7 +233,6 @@ public class DBDAO {
                 System.err.println("DBDAO - registerUser() Hibernate error: " + e.getMessage());
                 return false;
             } catch (Exception e) {
-                // Si falla hacemos rollback para deshacer cualquier cambio a medias
                 if (transaction.isActive()) {
                     transaction.rollback();
                 }
@@ -394,6 +393,7 @@ public class DBDAO {
                 if (offer != null && user != null && offer.getPlayers().contains(user)) {
                     offer.removePlayer(user);
 
+                    // Si no quedan usuarios, borramos la oferta
                     if (offer.getPlayers().isEmpty())
                         session.remove(offer);
                     else {
@@ -427,6 +427,7 @@ public class DBDAO {
     }
 
     // De momento no se usa, solo se borra chat cuando se salen todos
+    // Pero se usaría si se añade función a Admin para eliminar chats
 //    public boolean deleteChat(Integer chatId) {
 //        try (Session session = sessionFactory.openSession()) {
 //            Transaction transaction = session.beginTransaction();

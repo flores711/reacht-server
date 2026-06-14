@@ -14,6 +14,9 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+
+/// TESTS ANTIGUOS DESACTUALIZADOS
+
 public class MessageProcessorIntegrationTest {
 
     private MessageProcessor messageProcessor;

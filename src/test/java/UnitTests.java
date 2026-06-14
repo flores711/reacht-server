@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/// TESTS ANTIGUOS DESACTUALIZADOS
+
 public class UnitTests {
     @Test
     void daoLoginTest() {

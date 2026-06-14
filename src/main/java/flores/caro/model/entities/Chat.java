@@ -22,7 +22,7 @@ public class Chat {
     @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL)
     private List<Message> messageList;
 
-    // Para que se descarguen los usuarios también cuando obtenemos chat por daol
+    // Para que se descarguen los usuarios también cuando obtenemos chat por dao
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_chat",

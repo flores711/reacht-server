@@ -10,12 +10,12 @@ public class HibernateUtil {
 	private static SessionFactory buildSessionFactory() {
 		try {
             Configuration configuration = new Configuration();
-            configuration.configure();  // Se puede poner configure("nombre_archivo") para un nombre diferente del archivo de configuración
+            configuration.configure();
             SessionFactory sessionFactory = configuration.buildSessionFactory(new StandardServiceRegistryBuilder().configure().build());
 
             return sessionFactory;
 		} catch (Throwable e) {
-			System.err.println("Initial SessionFactory creation failed: " + e.getMessage());
+			System.err.println("HibernateUtil - Initial SessionFactory creation failed: " + e.getMessage());
 			throw new ExceptionInInitializerError(e);
 		}
 	}
