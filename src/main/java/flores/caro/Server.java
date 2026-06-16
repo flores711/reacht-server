@@ -177,8 +177,17 @@ public class Server implements Runnable {
             System.out.println("Server stopped successfully by user");
 
         // Capturar aqui excepciones y mostrar mensaje por pantalla
+        // Este error se puede lanzar si la BD no existe o las tablas no existen/no coinciden con las del servidor al ejecutarlo
+        // Escrito en configuración de hibernate que valide eso al principio, y si no salta este error directamente,
+        // para que el servidor no se abra si hay problemas con la BD
+        } catch (ExceptionInInitializerError e) {
+            System.err.println("Critical server error: could not make database connection. Check that MySQL is running and the database schema is correct.");
+            System.exit(1); // Para indicar hacia fuera que ha terminado con error. Así por ejemplo se muestra en la terminal al ejecutarlo
+            // en vez de cerrarse la terminal sin más por "haber finalizado la ejecución del main"
+            // Sólo se pone en el main
         } catch (Exception e) {
             System.err.println(e.getMessage());
+            System.exit(1);
         }
     }
 }

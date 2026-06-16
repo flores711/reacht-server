@@ -12,7 +12,10 @@
         <property name="hibernate.connection.username"> root </property>
         <property name="hibernate.connection.password"> 1234 </property>
 
-        <!-- Este hace que puedas VER por consola la sentencia SQL que hibernate usa al ejecutarlo -->
+        <!-- Valida al arrancar que las tablas de la BD coinciden con las entidades -->
+        <property name="hibernate.hbm2ddl.auto">validate</property>
+
+        <!-- Si se muestra por consola o no las sentencias SQL que hibernate usa al operar -->
         <property name="hibernate.show_sql">false</property>
 
         <!-- Clases con anotaciones -->

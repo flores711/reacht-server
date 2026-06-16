@@ -66,4 +66,45 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <!-- Empaqueta todas las dependencias en un único JAR ejecutable -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <!-- Se ejecuta durante la fase mvn package -->
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <filters>
+                                <filter>
+                                    <!-- Elimina las firmas digitales de las dependencias, que dejarían de ser válidas al mezclar los JARs -->
+                                    <artifact>*:*</artifact>    <!--Significa "a todos los JARs"-->
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <transformers>
+                                <!-- Indica cuál es la clase principal al ejecutar java -jar -->
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>flores.caro.Server</mainClass>
+                                </transformer>
+                                <!-- Para evitar posibles errores de compatibilidad entre librerías, necesario para Hibernate por ejemplo -->
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>
